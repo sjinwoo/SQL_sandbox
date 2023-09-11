@@ -1,0 +1,5 @@
+/.venv
+/Dockerfile
+/poetry.lock
+/sfscores.sqlite
+/__pycache__
