@@ -14,7 +14,6 @@ def get_sql_index_tool(sql_index, table_context_dict):
         text = str(response)
         sql = response.extra_info["sql_query"]
         return f"Here are the details on the SQL table: {table_context_str}\nSQL Query Used: {sql}\nSQL Result: {text}\n"
-        # return f"SQL Query Used: {sql}\nSQL Result: {text}\n"
 
     return run_sql_index_query
 
