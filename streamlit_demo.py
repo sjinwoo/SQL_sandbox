@@ -12,26 +12,23 @@ from llama_index.indices.struct_store import SQLContextContainerBuilder
 
 from constants import (
     DEFAULT_SQL_PATH,
-    DEFAULT_BUSINESS_TABLE_DESCRP,
-    DEFAULT_VIOLATIONS_TABLE_DESCRP,
-    DEFAULT_INSPECTIONS_TABLE_DESCRP,
+    DEFAULT_WELFARE_TABLE_DESCRP,
+    DEFAULT_WELFARE_BY_RANK_TABLE_DESCRP,
+    DEFAULT_WELFARE_BY_STANDARD_TABLE_DESCRP,
     DEFAULT_LC_TOOL_DESCRP,
 )
 from utils import get_sql_index_tool, get_llm
 
-
 @st.cache_resource
-def initialize_index(
-    llm_name, model_temperature, table_context_dict, api_key, sql_path=DEFAULT_SQL_PATH
-):
-    """Create the GPTSQLStructStoreIndex object."""
+def initialize_index(llm_name, model_temperature, table_context_dict, api_key, sql_path=DEFAULT_SQL_PATH):
+    " GPTSQLStructStoreIndex 객체를 생성하는 함수. "
     llm = get_llm(llm_name, model_temperature, api_key)
 
-    # DB 접속 엔진 생성 / DB URI로부터 엔진 생성
+    # DB 접속 엔진 생성 / DB URI(자원에 대한 고유 식별자)로부터 엔진 생성
     engine = create_engine(sql_path)
     sql_database = llama_SQLDatabase(engine)
 
-    # SQLDatabase 객체와 table descrp context로 Container 객체 생성
+    # SQLDatabase 객체와 table desc context로 Container 객체 생성
     context_container = None
     if table_context_dict is not None:
         context_builder = SQLContextContainerBuilder(
@@ -41,7 +38,7 @@ def initialize_index(
 
     # indexing, querying을 위한 ServiceContext 객체
     service_context = ServiceContext.from_defaults(llm_predictor=LLMPredictor(llm=llm))
-
+    
     # NL query를 SQL로 추출
     index = GPTSQLStructStoreIndex(
         [],
@@ -52,10 +49,10 @@ def initialize_index(
 
     return index
 
-
 @st.cache_resource
 def initialize_chain(llm_name, model_temperature, lc_descrp, api_key, _sql_index):
     """Create a (rather hacky) custom agent and sql_index tool."""
+    # 특정한 작업을 수행하는 Tool 객체 생성 -> sql_tool
     sql_tool = Tool(
         name="SQL Index",
         func=get_sql_index_tool(
@@ -66,9 +63,10 @@ def initialize_chain(llm_name, model_temperature, lc_descrp, api_key, _sql_index
 
     llm = get_llm(llm_name, model_temperature, api_key=api_key)
 
-    # chat history를 기억, chain 초기화
+    # chat history를 기억하기 위한 memory 객체 생성
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
+    # agent를 초기화 함.
     agent_chain = initialize_agent(
         [sql_tool],
         llm,
@@ -102,27 +100,27 @@ with setup_tab:
     st.subheader("LLM Setup")
     api_key = st.text_input("Enter your OpenAI API key here", type="password")
     llm_name = st.selectbox(
-        "Which LLM?", ["text-davinci-003", "gpt-3.5-turbo", "gpt-4"]
+        "Which LLM?", ["gpt-3.5-turbo", "text-davinci-003", "gpt-4"]
     )
     model_temperature = st.slider(
         "LLM Temperature", min_value=0.0, max_value=1.0, step=0.1
     )
 
     st.subheader("Table Setup")
-    business_table_descrp = st.text_area(
-        "Business table description", value=DEFAULT_BUSINESS_TABLE_DESCRP
+    welfare_table_descrp = st.text_area(
+        "Business table description", value=DEFAULT_WELFARE_TABLE_DESCRP
     )
-    violations_table_descrp = st.text_area(
-        "Violation table description", value=DEFAULT_VIOLATIONS_TABLE_DESCRP
+    welfare_rank_table_descrp = st.text_area(
+        "Violation table description", value=DEFAULT_WELFARE_BY_RANK_TABLE_DESCRP
     )
-    inspections_table_descrp = st.text_area(
-        "Inspection table description", value=DEFAULT_INSPECTIONS_TABLE_DESCRP
+    welfare_standard_table_descrp = st.text_area(
+        "Inspection table description", value=DEFAULT_WELFARE_BY_STANDARD_TABLE_DESCRP
     )
 
     table_context_dict = {
-        "businesses": business_table_descrp,
-        "inspections": inspections_table_descrp,
-        "violations": violations_table_descrp,
+        "복리후생": welfare_table_descrp,
+        "기준별_복리후생": welfare_rank_table_descrp,
+        "직급별_복리후생": welfare_standard_table_descrp,
     }
 
     use_table_descrp = st.checkbox("Use table descriptions?", value=True)
@@ -141,8 +139,9 @@ with llama_tab:
     
     if "llama_index" in st.session_state:
         query_text = st.text_input(
-            "Query:", value="Which restaurant has the most violations?"
+            "Query:", value="연 지급액이 100만원 이상인 직급은 무엇인가요?"
         )
+        
         use_nl = st.checkbox("Return natural language response?")
         if st.button("Run Query") and query_text:
             with st.spinner("Getting response..."):
@@ -185,7 +184,7 @@ with lc_tab:
         st.session_state["chat_history"] = []
 
     model_input = st.text_input(
-        "Message:", value="Which restaurant has the most violations?"
+        "Message:", value="연 지급액이 100만원 이상인 직급은 무엇인가요?"
     )
     if "lc_agent" in st.session_state and st.button("Send"):
         model_input = "User: " + model_input
