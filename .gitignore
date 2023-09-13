@@ -1,5 +1,6 @@
 /.venv
 /Dockerfile
 /poetry.lock
-/sfscores.sqlite
+/flat-table-3.sqlite
+/flat-table-2.sqlite
 /__pycache__
