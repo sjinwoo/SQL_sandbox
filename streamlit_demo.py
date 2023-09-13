@@ -13,8 +13,8 @@ from llama_index.indices.struct_store import SQLContextContainerBuilder
 from constants import (
     DEFAULT_SQL_PATH,
     DEFAULT_WELFARE_TABLE_DESCRP,
-    DEFAULT_WELFARE_BY_RANK_TABLE_DESCRP,
-    DEFAULT_WELFARE_BY_STANDARD_TABLE_DESCRP,
+    DEFAULT_WELFARE_CHILD_TABLE_DESCRP,
+    DEFAULT_WELFARE_RANK_TABLE_DESCRP,
     DEFAULT_LC_TOOL_DESCRP,
 )
 from utils import get_sql_index_tool, get_llm
@@ -108,19 +108,19 @@ with setup_tab:
 
     st.subheader("Table Setup")
     welfare_table_descrp = st.text_area(
-        "Business table description", value=DEFAULT_WELFARE_TABLE_DESCRP
+        "welfare table description", value=DEFAULT_WELFARE_TABLE_DESCRP
+    )
+    welfare_child_table_descrp = st.text_area(
+        "welfare_child table description", value=DEFAULT_WELFARE_CHILD_TABLE_DESCRP
     )
     welfare_rank_table_descrp = st.text_area(
-        "Violation table description", value=DEFAULT_WELFARE_BY_RANK_TABLE_DESCRP
-    )
-    welfare_standard_table_descrp = st.text_area(
-        "Inspection table description", value=DEFAULT_WELFARE_BY_STANDARD_TABLE_DESCRP
+        "welfare_rank table description", value=DEFAULT_WELFARE_RANK_TABLE_DESCRP
     )
 
     table_context_dict = {
-        "복리후생": welfare_table_descrp,
-        "기준별_복리후생": welfare_rank_table_descrp,
-        "직급별_복리후생": welfare_standard_table_descrp,
+        "WELFARE": welfare_table_descrp,
+        "WELFARE_CHILD": welfare_child_table_descrp,
+        "WELFARE_RANK": welfare_rank_table_descrp,
     }
 
     use_table_descrp = st.checkbox("Use table descriptions?", value=True)
@@ -139,7 +139,7 @@ with llama_tab:
     
     if "llama_index" in st.session_state:
         query_text = st.text_input(
-            "Query:", value="연 지급액이 100만원 이상인 직급은 무엇인가요?"
+            "Query:", value="과장의 경우 받을 수 있는 지원을 모두 알려주세요."
         )
         
         use_nl = st.checkbox("Return natural language response?")
@@ -184,7 +184,7 @@ with lc_tab:
         st.session_state["chat_history"] = []
 
     model_input = st.text_input(
-        "Message:", value="연 지급액이 100만원 이상인 직급은 무엇인가요?"
+        "Message:", value="과장의 경우 받을 수 있는 지원을 모두 알려주세요."
     )
     if "lc_agent" in st.session_state and st.button("Send"):
         model_input = "User: " + model_input
