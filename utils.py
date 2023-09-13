@@ -13,7 +13,7 @@ def get_sql_index_tool(sql_index, table_context_dict):
             return f"Error running SQL {e}.\nNot able to retrieve answer."
         text = str(response)
         sql = response.extra_info["sql_query"]
-        return f"Here are the details on the SQL table: {table_context_str}\nSQL Query Used: {sql}\nSQL Result: {text}\n"
+        return f"Here are the details on the SQL table: {table_context_str}\nSQL Query Used: {sql}\nSQL Result: {text}\nFinal Answer must be translate in Korean.\n"
 
     return run_sql_index_query
 
