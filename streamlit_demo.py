@@ -139,7 +139,7 @@ with llama_tab:
     
     if "llama_index" in st.session_state:
         query_text = st.text_input(
-            "Query:", value="과장의 경우 받을 수 있는 지원을 모두 알려주세요."
+            "Query:", value="화환을 받은 경우는 몇 건인가요?"
         )
         
         use_nl = st.checkbox("Return natural language response?")
